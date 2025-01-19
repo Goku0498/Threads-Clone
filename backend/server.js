@@ -1,37 +1,29 @@
-import path from "path";
 import express from "express";
-import dotenv from "dotenv";
-import connectDB from "./db/connectDB.js";
+import mongoose from "mongoose";
+import path from "path";
 import cookieParser from "cookie-parser";
-import userRoutes from "./routes/userRoutes.js";
-import postRoutes from "./routes/postRoutes.js";
-import messageRoutes from "./routes/messageRoutes.js";
 import { v2 as cloudinary } from "cloudinary";
-import { app, server } from "./socket/socket.js";
-import job from "./cron/cron.js";
+import postRoutes from "./routes/postRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 import { initializeDefaultPosts } from "./controllers/postController.js";
-
-dotenv.config();
-
+import connectDB from "./config/db.js";
+import job from "./jobs/cron.js";
+// Connect to the database
 connectDB();
+
+// Start any scheduled jobs
 job.start();
 
-const app=express();
-
-app.use("/api/posts", postRoutes);
-
-initializeDefaultPosts();
-
-const PORT=process.env.PORT||5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+const app = express();
+const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
+// Cloudinary configuration
 cloudinary.config({
-	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-	api_key: process.env.CLOUDINARY_API_KEY,
-	api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // Middlewares
@@ -44,13 +36,18 @@ app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
 
-if (process.env.NODE_ENV === "production") {
-	app.use(express.static(path.join(__dirname, "/frontend/dist")));
+// Initialize default posts
+initializeDefaultPosts();
 
-	// react app
-	app.get("*", (_req, res) => {
-		res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
-	});
+if (process.env.NODE_ENV === "production") {
+    app.use(express.static(path.join(__dirname, "/frontend/dist")));
+
+    // React app
+    app.get("*", (_req, res) => {
+        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+    });
 }
 
-server.listen(PORT, () => console.log(`Server started at http://localhost:${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

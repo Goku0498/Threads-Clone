@@ -9,13 +9,20 @@ import messageRoutes from "./routes/messageRoutes.js";
 import { v2 as cloudinary } from "cloudinary";
 import { app, server } from "./socket/socket.js";
 import job from "./cron/cron.js";
+import { initializeDefaultPosts } from "./controllers/postController.js";
 
 dotenv.config();
 
 connectDB();
 job.start();
+initializeDefaultPosts();
 
-const PORT = process.env.PORT || 5000;
+const app = express();
+
+const PORT=process.env.PORT||5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 const __dirname = path.resolve();
 
 cloudinary.config({

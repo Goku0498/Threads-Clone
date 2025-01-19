@@ -40,6 +40,66 @@ const createPost = async (req, res) => {
 	}
 };
 
+const defaultPosts = [
+    {
+        postedBy: "admin",
+        text: "Welcome to Threads-Clone! This is a default post.",
+        img: "https://img.freepik.com/free-vector/colorful-welcome-composition-with-origami-style_23-2147919827.jpg",
+    },
+    {
+        postedBy: "admin",
+        text: "Feel free to explore and create your own posts!",
+        img: "https://img.freepik.com/free-vector/design-process-landing-page-concept_23-2148319533.jpg",
+    },
+];
+
+const initializeDefaultPosts = async () => {
+    try {
+        const adminUser = await User.findOne({ username: "admin" });
+        if (!adminUser) {
+            console.log("Admin user not found. Please create an admin user.");
+            return;
+        }
+
+        for (const post of defaultPosts) {
+            const existingPost = await Post.findOne({ text: post.text });
+            if (!existingPost) {
+                const newPost = new Post({
+                    postedBy: adminUser._id,
+                    text: post.text,
+                    img: post.img,
+                });
+                await newPost.save();
+            }
+        }
+        console.log("Default posts initialized.");
+    } catch (err) {
+        console.error("Error initializing default posts:", err.message);
+    }
+};
+
+const getFeedPosts = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const following = user.following;
+
+        let feedPosts = await Post.find({ postedBy: { $in: following } }).sort({ createdAt: -1 });
+
+        if (feedPosts.length === 0) {
+            feedPosts = await Post.find({ text: { $in: defaultPosts.map(post => post.text) } }).sort({ createdAt: -1 });
+        }
+
+        res.status(200).json(feedPosts);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 const getPost = async (req, res) => {
 	try {
 		const post = await Post.findById(req.params.id);
@@ -134,24 +194,6 @@ const replyToPost = async (req, res) => {
 	}
 };
 
-const getFeedPosts = async (req, res) => {
-	try {
-		const userId = req.user._id;
-		const user = await User.findById(userId);
-		if (!user) {
-			return res.status(404).json({ error: "User not found" });
-		}
-
-		const following = user.following;
-
-		const feedPosts = await Post.find({ postedBy: { $in: following } }).sort({ createdAt: -1 });
-
-		res.status(200).json(feedPosts);
-	} catch (err) {
-		res.status(500).json({ error: err.message });
-	}
-};
-
 const getUserPosts = async (req, res) => {
 	const { username } = req.params;
 	try {
@@ -168,4 +210,4 @@ const getUserPosts = async (req, res) => {
 	}
 };
 
-export { createPost, getPost, deletePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts };
+export { createPost, getPost, deletePost, likeUnlikePost, initializeDefaultPosts, replyToPost, getFeedPosts, getUserPosts };

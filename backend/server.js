@@ -15,9 +15,12 @@ dotenv.config();
 
 connectDB();
 job.start();
-initializeDefaultPosts();
 
-const app = express();
+const app=express();
+
+app.use("/api/posts", postRoutes);
+
+initializeDefaultPosts();
 
 const PORT=process.env.PORT||5000;
 app.listen(PORT, () => {
@@ -45,7 +48,7 @@ if (process.env.NODE_ENV === "production") {
 	app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
 	// react app
-	app.get("*", (req, res) => {
+	app.get("*", (_req, res) => {
 		res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
 	});
 }

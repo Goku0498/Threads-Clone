@@ -6,7 +6,6 @@ import { v2 as cloudinary } from "cloudinary";
 import postRoutes from "./routes/postRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
-import { initializeDefaultPosts } from "./controllers/postController.js";
 import connectDB from "./config/db.js";
 import job from "./jobs/cron.js";
 // Connect to the database
@@ -35,9 +34,6 @@ app.use(cookieParser());
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
-
-// Initialize default posts
-initializeDefaultPosts();
 
 if (process.env.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "/frontend/dist")));

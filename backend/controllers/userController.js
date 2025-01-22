@@ -27,42 +27,72 @@ const getUserProfile = async (req, res) => {
 };
 
 const signupUser = async (req, res) => {
-	try {
-		const { name, email, username, password } = req.body;
-		const user = await User.findOne({ $or: [{ email }, { username }] });
+    try {
+        const { name, email, username, password, areasOfInterest } = req.body;
+        const user = await User.findOne({ $or: [{ email }, { username }] });
 
-		if (user) {
-			return res.status(400).json({ error: "User already exists" });
-		}
-		const salt = await bcrypt.genSalt(10);
-		const hashedPassword = await bcrypt.hash(password, salt);
+        if (user) {
+            return res.status(400).json({ error: "User already exists" });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-		const newUser = new User({
-			name,
-			email,
-			username,
-			password: hashedPassword,
-		});
-		await newUser.save();
+        const newUser = new User({
+            name,
+            email,
+            username,
+            password: hashedPassword,
+            areasOfInterest,
+        });
+        await newUser.save();
 
-		if (newUser) {
-			generateTokenAndSetCookie(newUser._id, res);
+        if (newUser) {
+            generateTokenAndSetCookie(newUser._id, res);
 
-			res.status(201).json({
-				_id: newUser._id,
-				name: newUser.name,
-				email: newUser.email,
-				username: newUser.username,
-				bio: newUser.bio,
-				profilePic: newUser.profilePic,
-			});
-		} else {
-			res.status(400).json({ error: "Invalid user data" });
-		}
-	} catch (err) {
-		res.status(500).json({ error: err.message });
-		console.log("Error in signupUser: ", err.message);
-	}
+            res.status(201).json({
+                _id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                username: newUser.username,
+                bio: newUser.bio,
+                profilePic: newUser.profilePic,
+                areasOfInterest: newUser.areasOfInterest,
+            });
+        } else {
+            res.status(400).json({ error: "Invalid user data" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+        console.log("Error in signupUser: ", err.message);
+    }
+};
+
+const getSuggestedUsers = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const currentUser = await User.findById(userId).select("areasOfInterest following");
+
+        const users = await User.aggregate([
+            {
+                $match: {
+                    _id: { $ne: userId },
+                    areasOfInterest: { $in: currentUser.areasOfInterest },
+                },
+            },
+            {
+                $sample: { size: 10 },
+            },
+        ]);
+
+        const filteredUsers = users.filter((user) => !currentUser.following.includes(user._id));
+        const suggestedUsers = filteredUsers.slice(0, 4);
+
+        suggestedUsers.forEach((user) => (user.password = null));
+
+        res.status(200).json(suggestedUsers);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
 const loginUser = async (req, res) => {
@@ -188,34 +218,6 @@ const updateUser = async (req, res) => {
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 		console.log("Error in updateUser: ", err.message);
-	}
-};
-
-const getSuggestedUsers = async (req, res) => {
-	try {
-		// exclude the current user from suggested users array and exclude users that current user is already following
-		const userId = req.user._id;
-
-		const usersFollowedByYou = await User.findById(userId).select("following");
-
-		const users = await User.aggregate([
-			{
-				$match: {
-					_id: { $ne: userId },
-				},
-			},
-			{
-				$sample: { size: 10 },
-			},
-		]);
-		const filteredUsers = users.filter((user) => !usersFollowedByYou.following.includes(user._id));
-		const suggestedUsers = filteredUsers.slice(0, 4);
-
-		suggestedUsers.forEach((user) => (user.password = null));
-
-		res.status(200).json(suggestedUsers);
-	} catch (error) {
-		res.status(500).json({ error: error.message });
 	}
 };
 

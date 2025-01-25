@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
     Box,
     Button,
@@ -22,7 +22,7 @@ const SignupCard = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const showToast = useShowToast();
-    const history = useHistory();
+    const navigate = useNavigate();
     const setAuthScreen = useSetRecoilState(authScreenAtom);
 
     const handleSignup = async (e) => {
@@ -41,7 +41,7 @@ const SignupCard = () => {
                 return;
             }
             showToast("Success", "Account created successfully", "success");
-            history.push("/login");
+            navigate("/login");
         } catch (error) {
             showToast("Error", error.message, "error");
         }

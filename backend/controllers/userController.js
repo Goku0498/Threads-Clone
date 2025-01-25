@@ -26,7 +26,7 @@ const getUserProfile = async (req, res) => {
 
 const signupUser = async (req, res) => {
     try {
-        const { name, email, username, password, areasOfInterest } = req.body;
+        const { name, email, username, password } = req.body;
         const user = await User.findOne({ $or: [{ email }, { username }] });
 
         if (user) {
@@ -40,7 +40,6 @@ const signupUser = async (req, res) => {
             email,
             username,
             password: hashedPassword,
-            areasOfInterest,
         });
         await newUser.save();
 
@@ -54,7 +53,6 @@ const signupUser = async (req, res) => {
                 username: newUser.username,
                 bio: newUser.bio,
                 profilePic: newUser.profilePic,
-                areasOfInterest: newUser.areasOfInterest,
             });
         } else {
             res.status(400).json({ error: "Invalid user data" });
@@ -67,27 +65,8 @@ const signupUser = async (req, res) => {
 
 const getSuggestedUsers = async (req, res) => {
     try {
-        const userId = req.user._id;
-        const currentUser = await User.findById(userId).select("areasOfInterest following");
-
-        const users = await User.aggregate([
-            {
-                $match: {
-                    _id: { $ne: userId },
-                    areasOfInterest: { $in: currentUser.areasOfInterest },
-                },
-            },
-            {
-                $sample: { size: 10 },
-            },
-        ]);
-
-        const filteredUsers = users.filter((user) => !currentUser.following.includes(user._id));
-        const suggestedUsers = filteredUsers.slice(0, 4);
-
-        suggestedUsers.forEach((user) => (user.password = null));
-
-        res.status(200).json(suggestedUsers);
+        const users = await User.aggregate([{ $sample: { size: 10 } }]);
+        res.status(200).json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -118,7 +97,6 @@ const loginUser = async (req, res) => {
             username: user.username,
             bio: user.bio,
             profilePic: user.profilePic,
-            areasOfInterest: user.areasOfInterest,
         });
     } catch (error) {
         res.status(500).json({ error: error.message });

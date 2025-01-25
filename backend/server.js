@@ -6,7 +6,7 @@ import { v2 as cloudinary } from "cloudinary";
 import postRoutes from "./routes/postRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
-import connectDB from "./config/db.js";
+import connectDB from "./connectDB.js";
 import job from "./jobs/cron.js";
 
 // Connect to the database

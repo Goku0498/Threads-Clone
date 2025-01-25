@@ -7,7 +7,7 @@ import postRoutes from "./routes/postRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import connectDB from "./db/connectDB.js";
-import job from "./jobs/cron.js";
+import job from "./cron/cron.js";
 
 // Connect to the database
 connectDB();

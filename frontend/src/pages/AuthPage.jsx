@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import LoginCard from "../components/LoginCard";

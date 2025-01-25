@@ -1,5 +1,4 @@
 import express from "express";
-import mongoose from "mongoose";
 import path from "path";
 import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";

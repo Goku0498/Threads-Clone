@@ -1,7 +1,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
-import { generateTokenAndSetCookie } from "../utils/auth.js";
+import { generateTokenAndSetCookie } from "../utils/helpers/generateTokenAndSetCookie.js";
 
 const getUserProfile = async (req, res) => {
     const { query } = req.params;

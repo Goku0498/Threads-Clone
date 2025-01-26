@@ -1,167 +1,159 @@
-import {
-	Button,
-	Flex,
-	FormControl,
-	FormLabel,
-	Heading,
-	Input,
-	Stack,
-	useColorModeValue,
-	Avatar,
-	Center,
-} from "@chakra-ui/react";
-import { useRef, useState } from "react";
-import { useRecoilState } from "recoil";
+/* eslint-disable no-unused-vars */
+import { useState } from "react";
+import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
-import usePreviewImg from "../hooks/usePreviewImg";
+import {
+    Box,
+    Button,
+    Input,
+    FormControl,
+    FormLabel,
+    CheckboxGroup,
+    Checkbox,
+    Stack,
+    Text,
+    Flex,
+    useColorModeValue,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItemOption,
+    MenuOptionGroup,
+} from "@chakra-ui/react";
 import useShowToast from "../hooks/useShowToast";
 
-export default function UpdateProfilePage() {
-	const [user, setUser] = useRecoilState(userAtom);
-	const [inputs, setInputs] = useState({
-		name: user.name,
-		username: user.username,
-		email: user.email,
-		bio: user.bio,
-		password: "",
-	});
-	const fileRef = useRef(null);
-	const [updating, setUpdating] = useState(false);
+const UpdateProfilePage = () => {
+    const user = useRecoilValue(userAtom);
+    const [name, setName] = useState(user.name);
+    const [email, setEmail] = useState(user.email);
+    const [username, setUsername] = useState(user.username);
+    const [bio, setBio] = useState(user.bio);
+    const [areasOfInterest, setAreasOfInterest] = useState(user.areasOfInterest || []);
+    const [isEditing, setIsEditing] = useState(false);
+    const showToast = useShowToast();
 
-	const showToast = useShowToast();
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch("/api/users/update", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ name, email, username, bio, areasOfInterest }),
+            });
+            const data = await res.json();
+            if (data.error) {
+                showToast("Error", data.error, "error");
+                return;
+            }
+            showToast("Success", "Profile updated successfully", "success");
+            setIsEditing(false);
+        } catch (error) {
+            showToast("Error", error.message, "error");
+        }
+    };
 
-	const { handleImageChange, imgUrl } = usePreviewImg();
+    return (
+        <Flex
+            minH={"100vh"}
+            align={"center"}
+            justify={"center"}
+            bg={useColorModeValue("gray.50", "gray.800")}
+        >
+            <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
+                <Stack align={"center"}>
+                    <Text fontSize={"4xl"}>Update Profile</Text>
+                </Stack>
+                <Box
+                    rounded={"lg"}
+                    bg={useColorModeValue("white", "gray.700")}
+                    boxShadow={"lg"}
+                    p={8}
+                >
+                    <Stack spacing={4}>
+                        <FormControl id="name">
+                            <FormLabel>Name</FormLabel>
+                            <Input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </FormControl>
+                        <FormControl id="email">
+                            <FormLabel>Email</FormLabel>
+                            <Input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </FormControl>
+                        <FormControl id="username">
+                            <FormLabel>Username</FormLabel>
+                            <Input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
+                        </FormControl>
+                        <FormControl id="bio">
+                            <FormLabel>Bio</FormLabel>
+                            <Input
+                                type="text"
+                                value={bio}
+                                onChange={(e) => setBio(e.target.value)}
+                            />
+                        </FormControl>
+                        <FormControl id="areasOfInterest">
+                            <FormLabel>Areas of Interest</FormLabel>
+                            {isEditing ? (
+                                <Menu closeOnSelect={false}>
+                                    <MenuButton as={Button} colorScheme="blue">
+                                        Edit Areas of Interest
+                                    </MenuButton>
+                                    <MenuList>
+                                        <MenuOptionGroup
+                                            defaultValue={areasOfInterest}
+                                            title="Interests"
+                                            type="checkbox"
+                                            onChange={setAreasOfInterest}
+                                        >
+                                            <MenuItemOption value="Technology">Technology</MenuItemOption>
+                                            <MenuItemOption value="Science">Science</MenuItemOption>
+                                            <MenuItemOption value="Art">Art</MenuItemOption>
+                                            <MenuItemOption value="Music">Music</MenuItemOption>
+                                            <MenuItemOption value="Sports">Sports</MenuItemOption>
+                                        </MenuOptionGroup>
+                                    </MenuList>
+                                </Menu>
+                            ) : (
+                                <Stack spacing={2}>
+                                    {areasOfInterest.map((interest) => (
+                                        <Text key={interest}>{interest}</Text>
+                                    ))}
+                                    <Button onClick={() => setIsEditing(true)}>Edit</Button>
+                                </Stack>
+                            )}
+                        </FormControl>
+                        <Stack spacing={10} pt={2}>
+                            <Button
+                                loadingText="Submitting"
+                                size="lg"
+                                bg={useColorModeValue("gray.600", "gray.700")}
+                                color={"white"}
+                                _hover={{
+                                    bg: useColorModeValue("gray.700", "gray.800"),
+                                }}
+                                onClick={handleUpdate}
+                            >
+                                Update Profile
+                            </Button>
+                        </Stack>
+                    </Stack>
+                </Box>
+            </Stack>
+        </Flex>
+    );
+};
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		if (updating) return;
-		setUpdating(true);
-		try {
-			const res = await fetch(`/api/users/update/${user._id}`, {
-				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ ...inputs, profilePic: imgUrl }),
-			});
-			const data = await res.json(); // updated user object
-			if (data.error) {
-				showToast("Error", data.error, "error");
-				return;
-			}
-			showToast("Success", "Profile updated successfully", "success");
-			setUser(data);
-			localStorage.setItem("user-threads", JSON.stringify(data));
-		} catch (error) {
-			showToast("Error", error, "error");
-		} finally {
-			setUpdating(false);
-		}
-	};
-	return (
-		<form onSubmit={handleSubmit}>
-			<Flex align={"center"} justify={"center"} my={6}>
-				<Stack
-					spacing={4}
-					w={"full"}
-					maxW={"md"}
-					bg={useColorModeValue("white", "gray.dark")}
-					rounded={"xl"}
-					boxShadow={"lg"}
-					p={6}
-				>
-					<Heading lineHeight={1.1} fontSize={{ base: "2xl", sm: "3xl" }}>
-						User Profile Edit
-					</Heading>
-					<FormControl id='userName'>
-						<Stack direction={["column", "row"]} spacing={6}>
-							<Center>
-								<Avatar size='xl' boxShadow={"md"} src={imgUrl || user.profilePic} />
-							</Center>
-							<Center w='full'>
-								<Button w='full' onClick={() => fileRef.current.click()}>
-									Change Avatar
-								</Button>
-								<Input type='file' hidden ref={fileRef} onChange={handleImageChange} />
-							</Center>
-						</Stack>
-					</FormControl>
-					<FormControl>
-						<FormLabel>Full name</FormLabel>
-						<Input
-							placeholder='John Doe'
-							value={inputs.name}
-							onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
-							_placeholder={{ color: "gray.500" }}
-							type='text'
-						/>
-					</FormControl>
-					<FormControl>
-						<FormLabel>User name</FormLabel>
-						<Input
-							placeholder='johndoe'
-							value={inputs.username}
-							onChange={(e) => setInputs({ ...inputs, username: e.target.value })}
-							_placeholder={{ color: "gray.500" }}
-							type='text'
-						/>
-					</FormControl>
-					<FormControl>
-						<FormLabel>Email address</FormLabel>
-						<Input
-							placeholder='your-email@example.com'
-							value={inputs.email}
-							onChange={(e) => setInputs({ ...inputs, email: e.target.value })}
-							_placeholder={{ color: "gray.500" }}
-							type='email'
-						/>
-					</FormControl>
-					<FormControl>
-						<FormLabel>Bio</FormLabel>
-						<Input
-							placeholder='Your bio.'
-							value={inputs.bio}
-							onChange={(e) => setInputs({ ...inputs, bio: e.target.value })}
-							_placeholder={{ color: "gray.500" }}
-							type='text'
-						/>
-					</FormControl>
-					<FormControl>
-						<FormLabel>Password</FormLabel>
-						<Input
-							placeholder='password'
-							value={inputs.password}
-							onChange={(e) => setInputs({ ...inputs, password: e.target.value })}
-							_placeholder={{ color: "gray.500" }}
-							type='password'
-						/>
-					</FormControl>
-					<Stack spacing={6} direction={["column", "row"]}>
-						<Button
-							bg={"red.400"}
-							color={"white"}
-							w='full'
-							_hover={{
-								bg: "red.500",
-							}}
-						>
-							Cancel
-						</Button>
-						<Button
-							bg={"green.400"}
-							color={"white"}
-							w='full'
-							_hover={{
-								bg: "green.500",
-							}}
-							type='submit'
-							isLoading={updating}
-						>
-							Submit
-						</Button>
-					</Stack>
-				</Stack>
-			</Flex>
-		</form>
-	);
-}
+export default UpdateProfilePage;

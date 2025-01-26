@@ -58,84 +58,86 @@ const SignupCard = ({ onSignup }) => {
                     boxShadow={"lg"}
                     p={8}
                 >
-                    <Stack spacing={4}>
-                        <FormControl id="name">
-                            <FormLabel>Name</FormLabel>
-                            <Input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
-                        </FormControl>
-                        <FormControl id="email">
-                            <FormLabel>Email</FormLabel>
-                            <Input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </FormControl>
-                        <FormControl id="username">
-                            <FormLabel>Username</FormLabel>
-                            <Input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                            />
-                        </FormControl>
-                        <FormControl id="password">
-                            <FormLabel>Password</FormLabel>
-                            <Input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </FormControl>
-                        <FormControl id="areasOfInterest">
-                            <FormLabel>Areas of Interest</FormLabel>
-                            <Menu closeOnSelect={false}>
-                                <MenuButton as={Button} colorScheme="blue">
-                                    Select Areas of Interest
-                                </MenuButton>
-                                <MenuList>
-                                    <MenuOptionGroup
-                                        defaultValue={areasOfInterest}
-                                        title="Interests"
-                                        type="checkbox"
-                                        onChange={(values) => setAreasOfInterest(values)}
-                                    >
-                                        <MenuItemOption value="Technology">Technology</MenuItemOption>
-                                        <MenuItemOption value="Science">Science</MenuItemOption>
-                                        <MenuItemOption value="Art">Art</MenuItemOption>
-                                        <MenuItemOption value="Music">Music</MenuItemOption>
-                                        <MenuItemOption value="Sports">Sports</MenuItemOption>
-                                    </MenuOptionGroup>
-                                </MenuList>
-                            </Menu>
-                        </FormControl>
-                        <Stack spacing={10} pt={2}>
-                            <Button
-                                loadingText="Submitting"
-                                size="lg"
-                                bg={useColorModeValue("gray.600", "gray.700")}
-                                color={"white"}
-                                _hover={{
-                                    bg: useColorModeValue("gray.700", "gray.800"),
-                                }}
-                                onClick={handleSignup}
-                            >
-                                Sign up
-                            </Button>
+                    <form onSubmit={handleSignup}>
+                        <Stack spacing={4}>
+                            <FormControl id="name">
+                                <FormLabel>Name</FormLabel>
+                                <Input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                            </FormControl>
+                            <FormControl id="email">
+                                <FormLabel>Email</FormLabel>
+                                <Input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </FormControl>
+                            <FormControl id="username">
+                                <FormLabel>Username</FormLabel>
+                                <Input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                />
+                            </FormControl>
+                            <FormControl id="password">
+                                <FormLabel>Password</FormLabel>
+                                <Input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </FormControl>
+                            <FormControl id="areasOfInterest">
+                                <FormLabel>Areas of Interest</FormLabel>
+                                <Menu closeOnSelect={false}>
+                                    <MenuButton as={Button} colorScheme="blue">
+                                        Select Areas of Interest
+                                    </MenuButton>
+                                    <MenuList>
+                                        <MenuOptionGroup
+                                            defaultValue={areasOfInterest}
+                                            title="Interests"
+                                            type="checkbox"
+                                            onChange={(values) => setAreasOfInterest(values)}
+                                        >
+                                            <MenuItemOption value="Technology">Technology</MenuItemOption>
+                                            <MenuItemOption value="Science">Science</MenuItemOption>
+                                            <MenuItemOption value="Art">Art</MenuItemOption>
+                                            <MenuItemOption value="Music">Music</MenuItemOption>
+                                            <MenuItemOption value="Sports">Sports</MenuItemOption>
+                                        </MenuOptionGroup>
+                                    </MenuList>
+                                </Menu>
+                            </FormControl>
+                            <Stack spacing={10} pt={2}>
+                                <Button
+                                    loadingText="Submitting"
+                                    size="lg"
+                                    bg={useColorModeValue("gray.600", "gray.700")}
+                                    color={"white"}
+                                    _hover={{
+                                        bg: useColorModeValue("gray.700", "gray.800"),
+                                    }}
+                                    type="submit"
+                                >
+                                    Sign up
+                                </Button>
+                            </Stack>
+                            <Stack pt={6}>
+                                <Text align={"center"}>
+                                    Already a user?{" "}
+                                    <Link color={"blue.400"} onClick={() => setAuthScreen("login")}>
+                                        Login
+                                    </Link>
+                                </Text>
+                            </Stack>
                         </Stack>
-                        <Stack pt={6}>
-                            <Text align={"center"}>
-                                Already a user?{" "}
-                                <Link color={"blue.400"} onClick={() => setAuthScreen("login")}>
-                                    Login
-                                </Link>
-                            </Text>
-                        </Stack>
-                    </Stack>
+                    </form>
                 </Box>
             </Stack>
         </Flex>

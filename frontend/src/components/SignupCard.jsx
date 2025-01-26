@@ -6,6 +6,8 @@ import {
     Input,
     FormControl,
     FormLabel,
+    CheckboxGroup,
+    Checkbox,
     Stack,
     Text,
     Link,
@@ -16,11 +18,12 @@ import useShowToast from "../hooks/useShowToast";
 import { useSetRecoilState } from "recoil";
 import authScreenAtom from "../atoms/authAtom";
 
-const SignupCard = () => {
+const SignupCard = ({ onSignup }) => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [areasOfInterest, setAreasOfInterest] = useState([]);
     const showToast = useShowToast();
     const navigate = useNavigate();
     const setAuthScreen = useSetRecoilState(authScreenAtom);
@@ -33,7 +36,7 @@ const SignupCard = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ name, email, username, password }),
+                body: JSON.stringify({ name, email, username, password, areasOfInterest }),
             });
             const data = await res.json();
             if (data.error) {
@@ -41,7 +44,8 @@ const SignupCard = () => {
                 return;
             }
             showToast("Success", "Account created successfully", "success");
-            navigate("/login");
+            onSignup(data);
+            navigate("/suggested-users");
         } catch (error) {
             showToast("Error", error.message, "error");
         }
@@ -96,6 +100,21 @@ const SignupCard = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
+                        </FormControl>
+                        <FormControl id="areasOfInterest">
+                            <FormLabel>Areas of Interest</FormLabel>
+                            <CheckboxGroup
+                                value={areasOfInterest}
+                                onChange={setAreasOfInterest}
+                            >
+                                <Stack spacing={5} direction="row">
+                                    <Checkbox value="Technology">Technology</Checkbox>
+                                    <Checkbox value="Science">Science</Checkbox>
+                                    <Checkbox value="Art">Art</Checkbox>
+                                    <Checkbox value="Music">Music</Checkbox>
+                                    <Checkbox value="Sports">Sports</Checkbox>
+                                </Stack>
+                            </CheckboxGroup>
                         </FormControl>
                         <Stack spacing={10} pt={2}>
                             <Button

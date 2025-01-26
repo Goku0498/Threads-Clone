@@ -31,44 +31,42 @@ const getUserProfile = async (req, res) => {
 };
 
 const signupUser = async (req, res) => {
-    try {
-        const { name, email, username, password, areasOfInterest } = req.body;
-        const user = await User.findOne({ $or: [{ email }, { username }] });
+	try {
+		const { name, email, username, password } = req.body;
+		const user = await User.findOne({ $or: [{ email }, { username }] });
 
-        if (user) {
-            return res.status(400).json({ error: "User already exists" });
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+		if (user) {
+			return res.status(400).json({ error: "User already exists" });
+		}
+		const salt = await bcrypt.genSalt(10);
+		const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User({
-            name,
-            email,
-            username,
-            password: hashedPassword,
-            areasOfInterest,
-        });
-        await newUser.save();
+		const newUser = new User({
+			name,
+			email,
+			username,
+			password: hashedPassword,
+		});
+		await newUser.save();
 
-        if (newUser) {
-            generateTokenAndSetCookie(newUser._id, res);
+		if (newUser) {
+			generateTokenAndSetCookie(newUser._id, res);
 
-            res.status(201).json({
-                _id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                username: newUser.username,
-                bio: newUser.bio,
-                profilePic: newUser.profilePic,
-                areasOfInterest: newUser.areasOfInterest,
-            });
-        } else {
-            res.status(400).json({ error: "Invalid user data" });
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-        console.log("Error in signupUser: ", err.message);
-    }
+			res.status(201).json({
+				_id: newUser._id,
+				name: newUser.name,
+				email: newUser.email,
+				username: newUser.username,
+				bio: newUser.bio,
+				profilePic: newUser.profilePic,
+			});
+		} else {
+			res.status(400).json({ error: "Invalid user data" });
+		}
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+		console.log("Error in signupUser: ", err.message);
+	}
 };
 
 const loginUser = async (req, res) => {
@@ -141,50 +139,60 @@ const followUnFollowUser = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const { name, email, username, password, bio, areasOfInterest } = req.body;
-    let { profilePic } = req.body;
+	const { name, email, username, password, bio } = req.body;
+	let { profilePic } = req.body;
 
-    const userId = req.user._id;
-    try {
-        const user = await User.findById(userId);
+	const userId = req.user._id;
+	try {
+		let user = await User.findById(userId);
+		if (!user) return res.status(400).json({ error: "User not found" });
 
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
+		if (req.params.id !== userId.toString())
+			return res.status(400).json({ error: "You cannot update other user's profile" });
 
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (username) user.username = username;
-        if (bio) user.bio = bio;
-        if (profilePic) user.profilePic = profilePic;
-        if (areasOfInterest) user.areasOfInterest = areasOfInterest;
+		if (password) {
+			const salt = await bcrypt.genSalt(10);
+			const hashedPassword = await bcrypt.hash(password, salt);
+			user.password = hashedPassword;
+		}
 
-        if (password) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(password, salt);
-        }
+		if (profilePic) {
+			if (user.profilePic) {
+				await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
+			}
 
-        await user.save();
+			const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+			profilePic = uploadedResponse.secure_url;
+		}
 
-        await Post.updateMany(
-            { "replies.userId": userId },
-            {
-                $set: {
-                    "replies.$[reply].username": user.username,
-                    "replies.$[reply].userProfilePic": user.profilePic,
-                },
-            },
-            { arrayFilters: [{ "reply.userId": userId }] }
-        );
+		user.name = name || user.name;
+		user.email = email || user.email;
+		user.username = username || user.username;
+		user.profilePic = profilePic || user.profilePic;
+		user.bio = bio || user.bio;
 
-        // password should be null in response
-        user.password = null;
+		user = await user.save();
 
-        res.status(200).json(user);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-        console.log("Error in updateUser: ", err.message);
-    }
+		// Find all posts that this user replied and update username and userProfilePic fields
+		await Post.updateMany(
+			{ "replies.userId": userId },
+			{
+				$set: {
+					"replies.$[reply].username": user.username,
+					"replies.$[reply].userProfilePic": user.profilePic,
+				},
+			},
+			{ arrayFilters: [{ "reply.userId": userId }] }
+		);
+
+		// password should be null in response
+		user.password = null;
+
+		res.status(200).json(user);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+		console.log("Error in updateUser: ", err.message);
+	}
 };
 
 const getSuggestedUsers = async (req, res) => {

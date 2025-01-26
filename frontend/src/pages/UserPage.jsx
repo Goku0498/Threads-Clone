@@ -1,47 +1,66 @@
 import { useEffect, useState } from "react";
+import UserHeader from "../components/UserHeader";
 import { useParams } from "react-router-dom";
-import { Box, Text, Avatar, Stack } from "@chakra-ui/react";
+import useShowToast from "../hooks/useShowToast";
+import { Flex, Spinner } from "@chakra-ui/react";
+import Post from "../components/Post";
+import useGetUserProfile from "../hooks/useGetUserProfile";
+import { useRecoilState } from "recoil";
+import postsAtom from "../atoms/postsAtom";
 
 const UserPage = () => {
-    const { username } = useParams();
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+	const { user, loading } = useGetUserProfile();
+	const { username } = useParams();
+	const showToast = useShowToast();
+	const [posts, setPosts] = useRecoilState(postsAtom);
+	const [fetchingPosts, setFetchingPosts] = useState(true);
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const res = await fetch(`/api/users/profile/${username}`);
-                const data = await res.json();
-                if (data.error) {
-                    // Handle error
-                    return;
-                }
-                setUser(data);
-                setLoading(false);
-            } catch (error) {
-                // Handle error
-            }
-        };
-        fetchUser();
-    }, [username]);
+	useEffect(() => {
+		const getPosts = async () => {
+			if (!user) return;
+			setFetchingPosts(true);
+			try {
+				const res = await fetch(`/api/posts/user/${username}`);
+				const data = await res.json();
+				console.log(data);
+				setPosts(data);
+			} catch (error) {
+				showToast("Error", error.message, "error");
+				setPosts([]);
+			} finally {
+				setFetchingPosts(false);
+			}
+		};
 
-    if (loading) {
-        return <Text>Loading...</Text>;
-    }
+		getPosts();
+	}, [username, showToast, setPosts, user]);
 
-    if (!user) {
-        return <Text>User not found</Text>;
-    }
+	if (!user && loading) {
+		return (
+			<Flex justifyContent={"center"}>
+				<Spinner size={"xl"} />
+			</Flex>
+		);
+	}
 
-    return (
-        <Box>
-            <Stack spacing={4} align="center">
-                <Avatar size="xl" src={user.profilePic} />
-                <Text fontSize="2xl">{user.username}</Text>
-                <Text>{user.bio}</Text>
-            </Stack>
-        </Box>
-    );
+	if (!user && !loading) return <h1>User not found</h1>;
+
+	return (
+		<>
+			<UserHeader user={user} />
+
+			{!fetchingPosts && posts.length === 0 && <h1>User has not posts.</h1>}
+			{fetchingPosts && (
+				<Flex justifyContent={"center"} my={12}>
+					<Spinner size={"xl"} />
+				</Flex>
+			)}
+
+			{posts.map((post) => (
+				<Post key={post._id} post={post} postedBy={post.postedBy} />
+			))}
+		</>
+	);
 };
 
 export default UserPage;

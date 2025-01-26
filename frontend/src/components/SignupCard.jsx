@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,8 +6,6 @@ import {
     Input,
     FormControl,
     FormLabel,
-    CheckboxGroup,
-    Checkbox,
     Stack,
     Text,
     Link,
@@ -17,10 +14,8 @@ import {
     Menu,
     MenuButton,
     MenuList,
-    MenuItem,
     MenuItemOption,
     MenuOptionGroup,
-    MenuDivider,
 } from "@chakra-ui/react";
 import useShowToast from "../hooks/useShowToast";
 import { useSetRecoilState } from "recoil";
@@ -107,7 +102,7 @@ const SignupCard = ({ onSignup }) => {
                                         defaultValue={areasOfInterest}
                                         title="Interests"
                                         type="checkbox"
-                                        onChange={setAreasOfInterest}
+                                        onChange={(values) => setAreasOfInterest(values)}
                                     >
                                         <MenuItemOption value="Technology">Technology</MenuItemOption>
                                         <MenuItemOption value="Science">Science</MenuItemOption>
